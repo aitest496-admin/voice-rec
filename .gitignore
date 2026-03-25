@@ -1,0 +1,11 @@
+__pycache__/
+build/
+dist/
+i-exp/
+Release/
+*.spec
+*.pdf
+*.png
+temp_license.txt
+pdf_content*.txt
+config.ini
