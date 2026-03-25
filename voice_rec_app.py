@@ -127,13 +127,12 @@ class DentalApp:
 
         self._setup_window()
         self._setup_ui()
-        self._start_recording()
+        # self._start_recording() # 自動開始を無効化
 
         # ×ボタンで閉じるときの処理
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
         
-        # 起動直後にWindowsの音声入力(Win+H)を自動で開く
-        self.root.after(500, self._trigger_windows_dictation)
+        # self.root.after(500, self._trigger_windows_dictation) # 自動開始を無効化
 
     def _trigger_windows_dictation(self):
         """Windows標準の音声認識（Win+H）を起動する"""
@@ -186,9 +185,9 @@ class DentalApp:
 
         self.rec_label = tk.Label(
             top_frame,
-            text="🔴 録音中",
+            text="📄 待機中",
             font=tkfont.Font(family="Meiryo UI", size=11),
-            fg="#e74c3c",
+            fg="#7f8c8d",
             bg="#2c3e50",
         )
         self.rec_label.pack(side=tk.RIGHT)
@@ -247,11 +246,11 @@ class DentalApp:
         
         self.pause_btn = tk.Button(
             btn_frame,
-            text="⏸ 一時停止",
+            text="🎙 録音開始",
             font=btn_font,
-            bg="#f39c12",
+            bg="#27ae60",
             fg="white",
-            activebackground="#f1c40f",
+            activebackground="#2ecc71",
             activeforeground="white",
             relief=tk.FLAT,
             padx=20,
@@ -453,18 +452,28 @@ class DentalApp:
         self._save_api_text("SOAP", soap_result)
 
     def toggle_pause(self):
-        """録音の一時停止・再開を切り替える。"""
+        """録音の開始・一時停止・再開を切り替える。"""
         if not self.is_recording:
-            return
-            
-        self.is_paused = not self.is_paused
-        
-        if self.is_paused:
-            self.pause_btn.config(text="▶ 録音再開", bg="#3498db", activebackground="#2980b9")
-            self.rec_label.config(text="⏸ 一時停止中", fg="#f39c12")
-        else:
+            # 初回起動: 録音開始
+            self._start_recording()
+            self._trigger_windows_dictation()
             self.pause_btn.config(text="⏸ 一時停止", bg="#f39c12", activebackground="#f1c40f")
             self.rec_label.config(text="🔴 録音中", fg="#e74c3c")
+        else:
+            # 録音中 または 一時停止中 の切り替え
+            self.is_paused = not self.is_paused
+            
+            if self.is_paused:
+                # 一時停止
+                self.pause_btn.config(text="▶ 録音再開", bg="#3498db", activebackground="#2980b9")
+                self.rec_label.config(text="⏸ 一時停止中", fg="#f39c12")
+                # Win+H を再度送ることで文字起こしを終了（トグル）
+                self._trigger_windows_dictation()
+            else:
+                # 再開
+                self._trigger_windows_dictation()
+                self.pause_btn.config(text="⏸ 一時停止", bg="#f39c12", activebackground="#f1c40f")
+                self.rec_label.config(text="🔴 録音中", fg="#e74c3c")
 
     def _start_recording(self):
         """バックグラウンド録音を開始する。"""
